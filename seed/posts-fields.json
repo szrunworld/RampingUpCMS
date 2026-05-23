@@ -1,0 +1,20 @@
+[
+  { "name": "title", "type": "text" },
+  { "name": "shortUrl", "type": "text" },
+  { "name": "subTitle", "type": "text" },
+  { "name": "type", "type": "text" },
+  { "name": "status", "type": "text" },
+  { "name": "blogCoverUrl", "type": "text" },
+  { "name": "seoTitle", "type": "text" },
+  { "name": "seoDescription", "type": "text" },
+  { "name": "seoTag", "type": "text" },
+  { "name": "publishedAt", "type": "text" },
+  { "name": "updatedAt", "type": "text" },
+  { "name": "authorName", "type": "text" },
+  { "name": "authorAvatar", "type": "text" },
+  { "name": "authorListJson", "type": "text" },
+  { "name": "docUrl", "type": "text" },
+  { "name": "docToken", "type": "text" },
+  { "name": "publishedUrl", "type": "text" },
+  { "name": "contentHtml", "type": "text" }
+]
