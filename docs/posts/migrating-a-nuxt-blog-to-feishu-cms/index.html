@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Migrating a Nuxt Blog to Feishu CMS | RampingUp CMS</title>
+  <meta name="description" content="A real Feishu Base record plus Feishu Doc body, wired to match your current Nuxt blog API shape." />
+  <link rel="canonical" href="https://szrunworld.github.io/RampingUpCMS/posts/migrating-a-nuxt-blog-to-feishu-cms/" />
+  <meta property="og:title" content="Migrating a Nuxt Blog to Feishu CMS | RampingUp CMS" />
+  <meta property="og:description" content="A real Feishu Base record plus Feishu Doc body, wired to match your current Nuxt blog API shape." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://szrunworld.github.io/RampingUpCMS/posts/migrating-a-nuxt-blog-to-feishu-cms/" />
+  <link rel="stylesheet" href="../../assets/site.css" />
+</head>
+<body class="article-page">
+
+      <main class="shell article-shell">
+        <article class="surface article-hero">
+          <img class="article-cover" src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Migrating a Nuxt Blog to a Feishu CMS Workflow" loading="lazy" />
+          <header class="article-header">
+            <a class="article-back" href="../../">← Back to all articles</a>
+            <div class="article-kicker">
+              <span class="post-card__tag">Developer</span>
+              <span class="hero-pill">Published 2026年5月23日</span>
+              
+            </div>
+            <h1 class="article-title">Migrating a Nuxt Blog to a Feishu CMS Workflow</h1>
+            <p class="article-subtitle">A real Feishu Base record plus Feishu Doc body, wired to match your current Nuxt blog API shape.</p>
+            <div class="article-meta">
+              <div class="author-stack">
+                <img src="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&amp;fit=crop&amp;w=200&amp;q=80" alt="Kevin Shi" loading="lazy" />
+                <div class="author-stack__text">
+                  <strong>Kevin Shi</strong>
+                  <span>Article author</span>
+                </div>
+              </div>
+              <div class="article-actions">
+                <a class="action-link action-link--primary" href="/posts/migrating-a-nuxt-blog-to-feishu-cms/">Permalink</a>
+                
+              </div>
+            </div>
+          </header>
+
+          <section class="article-body">
+            <div class="content">
+              <div class="feishu-callout" style="margin:0 0 20px;padding:16px 18px;border-radius:16px;background:rgba(142,246,60,0.12);border:1px solid rgba(142,246,60,0.28);"><p>这是一篇真实放在飞书文档里的示例文章，用来验证你的博客前端可以把飞书当成 CMS 内容源。</p></div><h1>Why This Fits Your Current Site</h1><p>Your current Nuxt blog already reads list and detail data from an API, so the frontend does not need a full rebuild.</p><p>We can keep the page routes and components, and only replace the content source behind them.</p><hr id="doxcn9o9LFAMt6Hg7ojyWYMaKFb"/><h2>Recommended Content Split<ul><li>Use Feishu Base for metadata like title, slug, SEO fields, cover, status, and doc token.</li><li>Use Feishu Docs for the article body so your team can edit content without touching code.</li><li>Keep a small adapter layer that transforms Feishu data into the exact JSON shape your current pages expect.</li></ul><hr id="doxcnbWrqe5beSxgN4zYV2aDlph"/><h2>What This Demo Proves</h2><p>This document is linked from a Base record and then rendered through the local adapter preview.</p><p>Once that works, the production site can switch from the old blog API to the Feishu-backed adapter with minimal frontend changes.</p>
+            </div>
+            <footer class="article-footer">
+              Static export generated on 2026/5/24 07:47.
+            </footer>
+          </section>
+        </article>
+      </main>
+    
+</body>
+</html>

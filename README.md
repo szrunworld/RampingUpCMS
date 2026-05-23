@@ -70,6 +70,8 @@ block renderer, because the current Nuxt detail page renders `content` via
   - Nuxt-compatible server middleware
 - `server/standalone-server.mjs`
   - lets you run the adapter without changing the Nuxt project first
+- `scripts/build-github-pages.mjs`
+  - exports the published Feishu CMS content into a static `docs/` site for GitHub Pages
 - `scripts/export-existing-blogs.mjs`
   - exports the current blog API content into JSON/CSV for Feishu migration
 - `.env.example`
@@ -86,6 +88,62 @@ The adapter exposes:
 
 - `POST /blogs/list`
 - `GET /blogs?shortUrl=...`
+
+## How to publish this as GitHub Pages
+
+GitHub Pages can only host static files, so the recommended setup is:
+
+1. Keep the current local Feishu CMS preview for editing and publishing.
+2. Export published content into `docs/`.
+3. Let GitHub Pages deploy the `docs/` folder.
+
+### Build the public site
+
+Make sure the local preview server is already running and can read your Feishu
+Base and Docs. Then run:
+
+```bash
+node scripts/build-github-pages.mjs
+```
+
+By default this:
+
+- reads the CMS from `http://127.0.0.1:4310`
+- writes the static site into `./docs`
+- downloads Feishu images and attachments into `docs/assets/media`
+- creates:
+  - `docs/index.html`
+  - `docs/posts/<shortUrl>/index.html`
+  - `docs/assets/site.css`
+  - `docs/404.html`
+  - `docs/search-index.json`
+
+### Deploy on GitHub
+
+This repo includes:
+
+- `.github/workflows/deploy-pages.yml`
+
+The workflow deploys the committed `docs/` directory to GitHub Pages on pushes
+to `main`.
+
+### Important note about GitHub Pages availability
+
+This repo is currently `szrunworld/RampingUpCMS`. The expected project site URL
+is:
+
+- `https://szrunworld.github.io/RampingUpCMS/`
+
+Depending on your GitHub plan and current repository settings, you may still
+need to enable GitHub Pages once in the repository settings and choose GitHub
+Actions as the source.
+
+GitHub's current documentation:
+
+- What GitHub Pages supports:
+  [What is GitHub Pages?](https://docs.github.com/pages/getting-started-with-github-pages/what-is-github-pages)
+- Creating a site:
+  [Creating a GitHub Pages site](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)
 
 ## How to export the existing blogs
 
