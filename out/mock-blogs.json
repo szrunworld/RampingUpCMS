@@ -1,0 +1,65 @@
+[
+  {
+    "recordId": "demo-remote-engineering",
+    "blogId": "demo-remote-engineering",
+    "shortUrl": "ramping-up-remote-engineering-team-build-manage-motivate",
+    "title": "Remote Engineering Excellence: How to Build, Manage, and Motivate Your Team",
+    "subTitle": "A Feishu CMS-backed preview of the existing Ramping Up blog experience for developer-facing content.",
+    "type": "0",
+    "status": "published",
+    "blogCoverUrl": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80",
+    "seoTitle": "Remote Engineering Excellence | Feishu CMS Preview",
+    "seoDescription": "A preview article rendered through the Feishu blog adapter, aligned with the current Nuxt detail page contract.",
+    "seoTag": "remote engineering, hiring, management, feishu cms",
+    "updatedAt": "2024-08-11T00:00:00.000Z",
+    "authorList": [
+      {
+        "name": "Team RampingUp",
+        "profilePic": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"
+      }
+    ],
+    "contentHtml": "<p>Whether you're a CEO trying to attract top talent, a CTO aiming to streamline project management, or a founder building a strong company culture, the mechanics of a high-performing remote engineering team matter.</p><p>This demo keeps your current blog page contract intact while swapping the source behind it. In a real rollout, the metadata would live in Feishu Base and the body would come from Feishu Docs.</p><p>The result is a writing workflow your team already understands, without forcing a full rebuild of the Nuxt frontend.</p>"
+  },
+  {
+    "recordId": "demo-global-payroll-checklist",
+    "blogId": "demo-global-payroll-checklist",
+    "shortUrl": "global-payroll-checklist-for-fast-scaling-teams",
+    "title": "Global Payroll Checklist for Fast-Scaling Teams",
+    "subTitle": "A sample employer-facing entry showing how editorial metadata and body content can be served from a Feishu-style CMS layer.",
+    "type": "1",
+    "status": "published",
+    "blogCoverUrl": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=80",
+    "seoTitle": "Global Payroll Checklist | Feishu CMS Preview",
+    "seoDescription": "Employer-facing content previewed through the Feishu adapter with the same response shape as the current Ramping Up blog API.",
+    "seoTag": "global payroll, employer, operations, feishu cms",
+    "updatedAt": "2025-02-18T00:00:00.000Z",
+    "authorList": [
+      {
+        "name": "Operations Team",
+        "profilePic": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80"
+      }
+    ],
+    "contentHtml": "<p>Scaling global payroll is rarely blocked by writing code. More often, it is blocked by fragmented operations, inconsistent contract data, and no single editorial source of truth.</p><p>In the Feishu CMS setup, those structured fields can live in Base while the long-form explanation, SOP notes, and policy comments live in Docs.</p><p>That gives your website team a clean API and your operations team a familiar editing surface.</p>"
+  },
+  {
+    "recordId": "demo-feishu-cms-migration",
+    "blogId": "demo-feishu-cms-migration",
+    "shortUrl": "migrating-a-nuxt-blog-to-feishu-cms",
+    "title": "Migrating a Nuxt Blog to a Feishu CMS Workflow",
+    "subTitle": "A technical preview of the exact integration path recommended for the current RampingUpWebsite project.",
+    "type": "0",
+    "status": "published",
+    "blogCoverUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+    "seoTitle": "Migrating a Nuxt Blog to Feishu CMS",
+    "seoDescription": "Technical preview article for the Feishu-backed blog adapter and migration path.",
+    "seoTag": "nuxt, feishu, cms, migration",
+    "updatedAt": "2026-05-23T00:00:00.000Z",
+    "authorList": [
+      {
+        "name": "Codex Pairing Demo",
+        "profilePic": "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=200&q=80"
+      }
+    ],
+    "contentHtml": "<p>Your current blog frontend already expects an API for list and detail pages. That is why Feishu is a good fit here: we can keep the Nuxt pages and replace only the content source.</p><p>In the first phase, the adapter can serve HTML from imported content or embedded doc links. In the second phase, it can fetch Feishu Doc blocks and render richer article layouts.</p><p>This preview is intentionally small, but it demonstrates the exact cutover shape the production site can use.</p>"
+  }
+]
