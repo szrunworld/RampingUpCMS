@@ -767,7 +767,6 @@ function feishuXmlToHtml(xml) {
     .replace(/<\/(ol|ul)>\s*<\/(h1|h2|h3)>/gi, "</$1>")
     .replace(/<p>([\s\S]*?)<(ol|ul)>/gi, "<p>$1</p><$2>")
     .replace(/<\/(ol|ul)>\s*<\/p>/gi, "</$1>")
-    .replace(/<\/h[1-3]>\s*(?=<(ol|ul)>)/gi, "")
     .replace(/<(h1|h2|h3|p|ul|ol|li|blockquote|pre|code|strong|em|span)(\s+[^>]*)?>/g, "<$1>")
     .replace(/<hr\s*\/>/g, "<hr />")
     .replace(/<h([1-3])>\s*<\/h\1>/gi, "")

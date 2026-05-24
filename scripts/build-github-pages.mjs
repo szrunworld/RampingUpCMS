@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
@@ -16,6 +17,7 @@ const SITE_DESCRIPTION =
   "A Feishu Docs powered blog, exported as a static site for GitHub Pages.";
 const SITE_ORIGIN =
   process.env.SITE_ORIGIN || `https://${OWNER}.github.io/${REPO}`;
+const INLINE_FEISHU_MEDIA = process.env.INLINE_FEISHU_MEDIA !== "0";
 
 const MIME_EXTENSION_MAP = {
   "image/jpeg": ".jpg",
@@ -601,6 +603,17 @@ img {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.content video,
+.content .feishu-inline-video {
+  display: block;
+  width: min(100%, 820px);
+  max-height: 460px;
+  margin: 1.5em auto;
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(77, 54, 31, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+}
+
 .feishu-file-card {
   margin: 1.6em 0;
   padding: 16px 18px;
@@ -822,12 +835,47 @@ function filenameFromSourceUrl(value) {
   return "";
 }
 
+function mimeFromSourceUrl(value) {
+  try {
+    const source = new URL(value);
+    const mime = source.searchParams.get("mime");
+    if (mime) {
+      return mime;
+    }
+    const ext = extensionFromUrl(value).toLowerCase();
+    const match = Object.entries(MIME_EXTENSION_MAP).find(
+      ([, candidateExt]) => candidateExt === ext,
+    );
+    return match ? match[0] : "application/octet-stream";
+  } catch (_) {
+    return "application/octet-stream";
+  }
+}
+
 async function runCurl(args, options = {}) {
   const result = await execFileAsync("curl", args, {
     encoding: options.encoding ?? "utf8",
     maxBuffer: 1024 * 1024 * 64,
   });
   return result.stdout;
+}
+
+async function canUseFfmpeg() {
+  if (typeof canUseFfmpeg.cached === "boolean") {
+    return canUseFfmpeg.cached;
+  }
+
+  try {
+    await execFileAsync("ffmpeg", ["-version"], {
+      encoding: "utf8",
+      maxBuffer: 1024 * 1024,
+    });
+    canUseFfmpeg.cached = true;
+  } catch (_) {
+    canUseFfmpeg.cached = false;
+  }
+
+  return canUseFfmpeg.cached;
 }
 
 async function fetchJson(url, init = {}) {
@@ -864,6 +912,85 @@ async function writeTextFile(filePath, content) {
   await fs.writeFile(filePath, content, "utf8");
 }
 
+async function optimizeImageBuffer(buffer, mime) {
+  const normalizedMime = String(mime || "").toLowerCase();
+  if (!normalizedMime.startsWith("image/")) {
+    return { buffer, mime: normalizedMime || "application/octet-stream" };
+  }
+
+  const shouldOptimize = normalizedMime === "image/gif" || buffer.length > 300 * 1024;
+
+  if (!shouldOptimize) {
+    return { buffer, mime: normalizedMime };
+  }
+
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "feishu-pages-"));
+  const inputExt = extensionFromMime(normalizedMime) || ".bin";
+  const inputPath = path.join(tempDir, `input${inputExt}`);
+  await fs.writeFile(inputPath, buffer);
+
+  try {
+    if (normalizedMime === "image/gif" && (await canUseFfmpeg())) {
+      const outputPath = path.join(tempDir, "output.mp4");
+      await execFileAsync(
+        "ffmpeg",
+        [
+          "-y",
+          "-i",
+          inputPath,
+          "-vf",
+          "fps=8,scale=900:-2:flags=lanczos",
+          "-movflags",
+          "+faststart",
+          "-pix_fmt",
+          "yuv420p",
+          outputPath,
+        ],
+        {
+          encoding: "utf8",
+          maxBuffer: 1024 * 1024 * 16,
+        },
+      );
+      const optimizedBuffer = await fs.readFile(outputPath);
+      if (optimizedBuffer.length > 0 && optimizedBuffer.length < buffer.length) {
+        return { buffer: optimizedBuffer, mime: "video/mp4" };
+      }
+      return { buffer, mime: normalizedMime };
+    }
+
+    const outputPath = path.join(tempDir, "output.jpg");
+    await execFileAsync(
+      "sips",
+      [
+        "-Z",
+        "1200",
+        "-s",
+        "format",
+        "jpeg",
+        "--setProperty",
+        "formatOptions",
+        "70",
+        inputPath,
+        "--out",
+        outputPath,
+      ],
+      {
+        encoding: "utf8",
+        maxBuffer: 1024 * 1024 * 4,
+      },
+    );
+    const optimizedBuffer = await fs.readFile(outputPath);
+    if (optimizedBuffer.length > 0 && optimizedBuffer.length < buffer.length) {
+      return { buffer: optimizedBuffer, mime: "image/jpeg" };
+    }
+    return { buffer, mime: normalizedMime };
+  } catch (_) {
+    return { buffer, mime: normalizedMime };
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
 function relativeUrl(fromFilePath, toFilePath) {
   return path
     .relative(path.dirname(fromFilePath), toFilePath)
@@ -897,6 +1024,16 @@ async function localizeMediaUrl(sourceValue, state) {
   const mediaFileName = `${hash}${ext || ""}`;
   const mediaFilePath = path.join(state.mediaDir, mediaFileName);
   await ensureDir(path.dirname(mediaFilePath));
+
+  const mime = mimeFromSourceUrl(sourceUrl);
+
+  if (INLINE_FEISHU_MEDIA) {
+    const buffer = await fetchBinary(sourceUrl);
+    const optimized = await optimizeImageBuffer(buffer, mime);
+    const dataUri = `data:${optimized.mime};base64,${optimized.buffer.toString("base64")}`;
+    state.mediaCache.set(sourceUrl, dataUri);
+    return dataUri;
+  }
 
   if (!state.writtenMediaFiles.has(mediaFilePath)) {
     const buffer = await fetchBinary(sourceUrl);
@@ -943,6 +1080,33 @@ async function localizePossibleAssetUrl(sourceValue, state, pageAssetPrefix) {
 
 async function rewriteContentAssets(html, state, pageAssetPrefix) {
   let result = String(html || "");
+  const imageMatches = [...result.matchAll(/<img\b[^>]*src="([^"]+)"[^>]*>/gi)];
+
+  for (const match of imageMatches) {
+    const [fullMatch, srcValue] = match;
+    if (!isLocalCmsMediaUrl(srcValue)) {
+      continue;
+    }
+
+    const localized = assetPathForPage(
+      await localizeMediaUrl(srcValue, state),
+      pageAssetPrefix,
+    );
+
+    if (!localized.startsWith("data:video/")) {
+      continue;
+    }
+
+    const classMatch = fullMatch.match(/\bclass="([^"]*)"/i);
+    const className = classMatch
+      ? `${classMatch[1]} feishu-inline-video`.trim()
+      : "feishu-inline-video";
+    const videoTag = `<video class="${escapeHtml(
+      className,
+    )}" autoplay loop muted playsinline controls src="${escapeHtml(localized)}"></video>`;
+    result = result.replace(fullMatch, videoTag);
+  }
+
   const matches = [...result.matchAll(/\b(src|href)="([^"]+)"/gi)];
 
   for (const match of matches) {
@@ -1091,6 +1255,7 @@ function renderIndexPage(posts) {
 
 function renderArticlePage(post) {
   const canonicalPath = `/posts/${encodeURIComponent(post.outputDirName)}/`;
+  const publicUrl = `${SITE_ORIGIN.replace(/\/+$/, "")}${canonicalPath}`;
   const publishedDate = formatDate(post.publishedAt || post.updatedAt);
   const updatedDate = formatDate(post.updatedAt || post.publishedAt);
   const openInFeishu = post.docUrl
@@ -1136,7 +1301,7 @@ function renderArticlePage(post) {
                 </div>
               </div>
               <div class="article-actions">
-                <a class="action-link action-link--primary" href="${escapeHtml(canonicalPath)}">Permalink</a>
+                <a class="action-link action-link--primary" href="${escapeHtml(publicUrl)}">Public URL</a>
                 ${openInFeishu}
               </div>
             </div>
