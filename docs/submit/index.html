@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Add a new article | RampingUp CMS</title>
+  <meta name="description" content="Paste a Feishu wiki or docx link, then continue in the CMS editor with the form pre-filled." />
+  <link rel="canonical" href="https://szrunworld.github.io/RampingUpCMS/submit/" />
+  <meta property="og:title" content="Add a new article | RampingUp CMS" />
+  <meta property="og:description" content="Paste a Feishu wiki or docx link, then continue in the CMS editor with the form pre-filled." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://szrunworld.github.io/RampingUpCMS/submit/" />
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body class="">
+
+      <main class="shell">
+        <section class="submit-grid">
+          <article class="surface submit-card">
+            <span class="hero-badge">Feishu CMS entry</span>
+            <h1>Turn a <span style="color:var(--brand);">Feishu doc</span> into a public article.</h1>
+            <p>Paste a Feishu wiki or docx link here. This page will open the protected CMS editor and pre-fill everything for you, so you can create the article with one more click.</p>
+
+            <form class="submit-form" id="article-submit-form">
+              <div class="submit-field">
+                <label for="doc-url">Feishu document URL</label>
+                <input id="doc-url" name="docUrl" type="url" required placeholder="https://rampingup.feishu.cn/wiki/... or /docx/..." />
+                <small>Supported sources: Feishu wiki and docx links.</small>
+              </div>
+              <div class="submit-field">
+                <label for="doc-type">Article type</label>
+                <select id="doc-type" name="type">
+                  <option value="0">Developer</option>
+                  <option value="1">Employer</option>
+                </select>
+              </div>
+              <div class="submit-field">
+                <label for="doc-status">Initial status</label>
+                <select id="doc-status" name="status">
+                  <option value="draft">draft</option>
+                  <option value="published">published</option>
+                </select>
+              </div>
+              <div class="submit-actions">
+                <button class="action-link action-link--primary" type="submit">Continue in CMS</button>
+                <a class="action-link" href="../">Back to homepage</a>
+              </div>
+              <div class="submit-status" id="submit-status">The editor will open at http://127.0.0.1:4310. If you host the admin editor elsewhere later, set <code>CMS_EDITOR_URL</code> before exporting.</div>
+            </form>
+          </article>
+
+          <aside class="surface submit-card">
+            <h2>What happens next</h2>
+            <p>This public site stays static on GitHub Pages. Actual creation still happens inside the CMS editor, where your Feishu Base and Feishu Docs permissions are available.</p>
+            <ol class="submit-list">
+              <li>Paste your Feishu link here.</li>
+              <li>The CMS editor opens with the link, type, and status already filled in.</li>
+              <li>The editor auto-reads the title and summary from Feishu, then you can create or publish the article.</li>
+            </ol>
+          </aside>
+        </section>
+      </main>
+      <script>
+        (function () {
+          const form = document.getElementById("article-submit-form");
+          const statusEl = document.getElementById("submit-status");
+          const editorBase = "http://127.0.0.1:4310";
+
+          form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const docUrl = String(formData.get("docUrl") || "").trim();
+            const type = String(formData.get("type") || "0");
+            const status = String(formData.get("status") || "draft");
+
+            if (!docUrl) {
+              statusEl.textContent = "Please paste a Feishu document link first.";
+              return;
+            }
+
+            const params = new URLSearchParams({
+              docUrl: docUrl,
+              type: type,
+              status: status,
+              openComposer: "1",
+              autoHydrate: "1",
+            });
+
+            window.location.href = editorBase + "/?" + params.toString();
+          });
+        })();
+      </script>
+    
+</body>
+</html>

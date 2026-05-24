@@ -636,6 +636,7 @@ const html = `<!DOCTYPE html>
     const subTitleInput = document.getElementById("subTitle");
     const shortUrlInput = document.getElementById("shortUrl");
     const docUrlInput = document.getElementById("docUrl");
+    const pageQuery = new URLSearchParams(window.location.search);
     let currentType = "all";
     let currentStatus = "published";
     let currentPosts = [];
@@ -735,6 +736,69 @@ const html = `<!DOCTYPE html>
       setDocMetaStatus("只想快速新增一篇时，最少只需要飞书文档链接这一步。系统会在后台自动尝试提取标题、副标题和 shortUrl。", "");
       if (closePanel) {
         composerEl.open = false;
+      }
+    }
+
+    async function applyQueryPrefill() {
+      const docUrl = (pageQuery.get("docUrl") || "").trim();
+      const title = (pageQuery.get("title") || "").trim();
+      const subTitle = (pageQuery.get("subTitle") || "").trim();
+      const shortUrl = (pageQuery.get("shortUrl") || "").trim();
+      const blogCoverUrl = (pageQuery.get("blogCoverUrl") || "").trim();
+      const authorName = (pageQuery.get("authorName") || "").trim();
+      const queryType = (pageQuery.get("type") || "").trim();
+      const queryStatus = (pageQuery.get("status") || "").trim();
+      const openComposer = pageQuery.get("openComposer") !== "0";
+      const autoHydrate = pageQuery.get("autoHydrate") !== "0";
+
+      if (queryType === "0" || queryType === "1") {
+        composerForm.type.value = queryType;
+        currentType = queryType;
+      }
+
+      if (queryStatus === "draft" || queryStatus === "published" || queryStatus === "all") {
+        composerForm.status.value = queryStatus === "all" ? "draft" : queryStatus;
+        currentStatus = queryStatus;
+      }
+
+      if (!docUrl && !title && !subTitle && !shortUrl && !blogCoverUrl && !authorName) {
+        return;
+      }
+
+      if (docUrl) {
+        docUrlInput.value = docUrl;
+      }
+      if (title) {
+        titleInput.value = title;
+      }
+      if (subTitle) {
+        subTitleInput.value = subTitle;
+      }
+      if (shortUrl) {
+        shortUrlInput.value = shortUrl;
+        shortUrlInput.dataset.manual = "1";
+      }
+      if (blogCoverUrl) {
+        composerForm.blogCoverUrl.value = blogCoverUrl;
+      }
+      if (authorName) {
+        composerForm.authorName.value = authorName;
+      }
+
+      if (openComposer) {
+        composerEl.open = true;
+      }
+
+      setComposerStatus("我已经把公开站带过来的预填信息放进表单里了。确认一下后，你可以直接一键创建草稿或发布。", "");
+
+      if (docUrl && autoHydrate) {
+        setDocMetaStatus("已带入飞书文档链接，正在自动读取标题和摘要…", "");
+        await hydrateFromDoc(openComposer);
+        return;
+      }
+
+      if (docUrl) {
+        setDocMetaStatus("已带入飞书文档链接。你也可以手动点一次“读取文档信息”同步标题和摘要。", "");
       }
     }
 
@@ -1132,7 +1196,9 @@ const html = `<!DOCTYPE html>
     });
 
     restoreCreateMode(false);
-    reload(currentType, currentStatus);
+    Promise.resolve(applyQueryPrefill()).finally(function () {
+      reload(currentType, currentStatus);
+    });
   </script>
 </body>
 </html>`;

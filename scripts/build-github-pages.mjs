@@ -8,6 +8,7 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 
 const CMS_ORIGIN = process.env.CMS_ORIGIN || "http://127.0.0.1:4310";
+const CMS_EDITOR_URL = process.env.CMS_EDITOR_URL || CMS_ORIGIN;
 const OUT_DIR = path.resolve(process.cwd(), process.env.OUT_DIR || "docs");
 const OWNER = process.env.GITHUB_OWNER || "szrunworld";
 const REPO = process.env.GITHUB_REPO || "RampingUpCMS";
@@ -169,6 +170,13 @@ img {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 22px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
 }
 
 .hero-pill {
@@ -473,6 +481,12 @@ img {
   color: white;
 }
 
+.action-link--soft {
+  background: rgba(13, 124, 102, 0.08);
+  border-color: rgba(13, 124, 102, 0.18);
+  color: var(--brand);
+}
+
 .article-body {
   padding: 30px 16px 6px;
 }
@@ -651,8 +665,88 @@ img {
   font-size: 14px;
 }
 
+.submit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  gap: 20px;
+}
+
+.submit-card {
+  border-radius: 34px;
+  padding: 30px 28px;
+}
+
+.submit-card h1,
+.submit-card h2 {
+  margin: 0 0 12px;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.submit-card h1 {
+  font-size: clamp(34px, 5vw, 62px);
+}
+
+.submit-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.submit-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.submit-field {
+  display: grid;
+  gap: 8px;
+}
+
+.submit-field label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.submit-field input,
+.submit-field select {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--text);
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.submit-field small,
+.submit-status,
+.submit-list {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.submit-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.submit-list {
+  margin: 16px 0 0;
+  padding-left: 18px;
+}
+
+.submit-list li + li {
+  margin-top: 10px;
+}
+
 @media (max-width: 960px) {
   .site-hero,
+  .submit-grid,
   .cards,
   .post-card {
     grid-template-columns: 1fr;
@@ -1026,18 +1120,20 @@ async function localizeMediaUrl(sourceValue, state) {
   await ensureDir(path.dirname(mediaFilePath));
 
   const mime = mimeFromSourceUrl(sourceUrl);
+  let fetchedBuffer = null;
 
   if (INLINE_FEISHU_MEDIA) {
-    const buffer = await fetchBinary(sourceUrl);
-    const optimized = await optimizeImageBuffer(buffer, mime);
-    const dataUri = `data:${optimized.mime};base64,${optimized.buffer.toString("base64")}`;
-    state.mediaCache.set(sourceUrl, dataUri);
-    return dataUri;
+    fetchedBuffer = await fetchBinary(sourceUrl);
+    const optimized = await optimizeImageBuffer(fetchedBuffer, mime);
+    if (/^(image|video)\//i.test(optimized.mime)) {
+      const dataUri = `data:${optimized.mime};base64,${optimized.buffer.toString("base64")}`;
+      state.mediaCache.set(sourceUrl, dataUri);
+      return dataUri;
+    }
   }
 
   if (!state.writtenMediaFiles.has(mediaFilePath)) {
-    const buffer = await fetchBinary(sourceUrl);
-    await fs.writeFile(mediaFilePath, buffer);
+    await fs.writeFile(mediaFilePath, fetchedBuffer || (await fetchBinary(sourceUrl)));
     state.writtenMediaFiles.add(mediaFilePath);
   }
 
@@ -1049,6 +1145,14 @@ async function localizeMediaUrl(sourceValue, state) {
 function assetPathForPage(rootRelativePath, pageAssetPrefix) {
   if (!rootRelativePath) {
     return "";
+  }
+  if (
+    rootRelativePath.startsWith("data:") ||
+    rootRelativePath.startsWith("http://") ||
+    rootRelativePath.startsWith("https://") ||
+    rootRelativePath.startsWith("//")
+  ) {
+    return rootRelativePath;
   }
   return `${pageAssetPrefix}${rootRelativePath}`;
 }
@@ -1226,6 +1330,10 @@ function renderIndexPage(posts) {
               <span class="hero-pill">${posts.length} published article${posts.length === 1 ? "" : "s"}</span>
               <span class="hero-pill">Latest export: ${escapeHtml(generatedAt)}</span>
             </div>
+            <div class="hero-actions">
+              <a class="action-link action-link--primary" href="./submit/">Add a new article</a>
+              <a class="action-link action-link--soft" href="./search-index.json">Browse JSON index</a>
+            </div>
           </div>
           <aside class="hero-side">
             <div>
@@ -1261,6 +1369,7 @@ function renderArticlePage(post) {
   const openInFeishu = post.docUrl
     ? `<a class="action-link" href="${escapeHtml(post.docUrl)}" target="_blank" rel="noopener noreferrer">Open in Feishu</a>`
     : "";
+  const createArticleLink = `<a class="action-link action-link--soft" href="../../submit/">Add article</a>`;
   const cover = post.articleCoverUrl
     ? `<img class="article-cover" src="${escapeHtml(post.articleCoverUrl)}" alt="${escapeHtml(post.title)}" loading="lazy" />`
     : "";
@@ -1303,6 +1412,7 @@ function renderArticlePage(post) {
               <div class="article-actions">
                 <a class="action-link action-link--primary" href="${escapeHtml(publicUrl)}">Public URL</a>
                 ${openInFeishu}
+                ${createArticleLink}
               </div>
             </div>
           </header>
@@ -1317,6 +1427,98 @@ function renderArticlePage(post) {
           </section>
         </article>
       </main>
+    `,
+  });
+}
+
+function renderSubmitPage() {
+  const editorUrl = CMS_EDITOR_URL.replace(/\/+$/, "");
+
+  return layout({
+    title: `Add a new article | ${SITE_TITLE}`,
+    description:
+      "Paste a Feishu wiki or docx link, then continue in the CMS editor with the form pre-filled.",
+    canonicalPath: "/submit/",
+    stylesheetPath: "../assets/site.css",
+    body: `
+      <main class="shell">
+        <section class="submit-grid">
+          <article class="surface submit-card">
+            <span class="hero-badge">Feishu CMS entry</span>
+            <h1>Turn a <span style="color:var(--brand);">Feishu doc</span> into a public article.</h1>
+            <p>Paste a Feishu wiki or docx link here. This page will open the protected CMS editor and pre-fill everything for you, so you can create the article with one more click.</p>
+
+            <form class="submit-form" id="article-submit-form">
+              <div class="submit-field">
+                <label for="doc-url">Feishu document URL</label>
+                <input id="doc-url" name="docUrl" type="url" required placeholder="https://rampingup.feishu.cn/wiki/... or /docx/..." />
+                <small>Supported sources: Feishu wiki and docx links.</small>
+              </div>
+              <div class="submit-field">
+                <label for="doc-type">Article type</label>
+                <select id="doc-type" name="type">
+                  <option value="0">Developer</option>
+                  <option value="1">Employer</option>
+                </select>
+              </div>
+              <div class="submit-field">
+                <label for="doc-status">Initial status</label>
+                <select id="doc-status" name="status">
+                  <option value="draft">draft</option>
+                  <option value="published">published</option>
+                </select>
+              </div>
+              <div class="submit-actions">
+                <button class="action-link action-link--primary" type="submit">Continue in CMS</button>
+                <a class="action-link" href="../">Back to homepage</a>
+              </div>
+              <div class="submit-status" id="submit-status">The editor will open at ${escapeHtml(
+                editorUrl,
+              )}. If you host the admin editor elsewhere later, set <code>CMS_EDITOR_URL</code> before exporting.</div>
+            </form>
+          </article>
+
+          <aside class="surface submit-card">
+            <h2>What happens next</h2>
+            <p>This public site stays static on GitHub Pages. Actual creation still happens inside the CMS editor, where your Feishu Base and Feishu Docs permissions are available.</p>
+            <ol class="submit-list">
+              <li>Paste your Feishu link here.</li>
+              <li>The CMS editor opens with the link, type, and status already filled in.</li>
+              <li>The editor auto-reads the title and summary from Feishu, then you can create or publish the article.</li>
+            </ol>
+          </aside>
+        </section>
+      </main>
+      <script>
+        (function () {
+          const form = document.getElementById("article-submit-form");
+          const statusEl = document.getElementById("submit-status");
+          const editorBase = ${JSON.stringify(editorUrl)};
+
+          form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const docUrl = String(formData.get("docUrl") || "").trim();
+            const type = String(formData.get("type") || "0");
+            const status = String(formData.get("status") || "draft");
+
+            if (!docUrl) {
+              statusEl.textContent = "Please paste a Feishu document link first.";
+              return;
+            }
+
+            const params = new URLSearchParams({
+              docUrl: docUrl,
+              type: type,
+              status: status,
+              openComposer: "1",
+              autoHydrate: "1",
+            });
+
+            window.location.href = editorBase + "/?" + params.toString();
+          });
+        })();
+      </script>
     `,
   });
 }
@@ -1348,6 +1550,7 @@ async function build() {
   await writeTextFile(path.join(OUT_DIR, "assets", "site.css"), siteCss);
   await writeTextFile(path.join(OUT_DIR, ".nojekyll"), "");
   await writeTextFile(path.join(OUT_DIR, "404.html"), render404Page());
+  await writeTextFile(path.join(OUT_DIR, "submit", "index.html"), renderSubmitPage());
 
   const listPayload = await fetchJson(`${CMS_ORIGIN}/blogs/list`, {
     method: "POST",

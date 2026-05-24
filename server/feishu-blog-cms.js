@@ -504,6 +504,20 @@ function isHeadingLikeParagraph(innerHtml) {
   return !/<[a-z]/i.test(wrapperOnly);
 }
 
+function isLikelyShortHeadingText(value) {
+  const plain = stripMarkupToPlainText(value);
+  if (!plain || plain.length > 72) {
+    return false;
+  }
+
+  if (/[。！？.!?;；]$/.test(plain)) {
+    return false;
+  }
+
+  const words = plain.split(/\s+/).filter(Boolean);
+  return words.length <= 8;
+}
+
 function standardizeContentHtml(value) {
   return String(value || "")
     .replace(/<cite\b([^>]*)>([\s\S]*?)<\/cite>/gi, (_, attrs, inner) => {
@@ -521,6 +535,22 @@ function standardizeContentHtml(value) {
     .replace(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi, (_, attrs, inner) => {
       return normalizeAnchorTag(attrs, inner);
     })
+    .replace(
+      /<p>\s*((?:<(?:b|strong)\b[^>]*>(?:<span\b[^>]*>)?[\s\S]*?(?:<\/span>)?<\/(?:b|strong)>))\s*([^<]{2,64})\s*<\/p>/gi,
+      (match, leftMarkup, rightText) => {
+        const leftPlain = stripMarkupToPlainText(leftMarkup);
+        const rightPlain = stripMarkupToPlainText(rightText);
+
+        if (
+          !isLikelyShortHeadingText(leftPlain) ||
+          !isLikelyShortHeadingText(rightPlain)
+        ) {
+          return match;
+        }
+
+        return `<h3>${escapeHtml(leftPlain)}</h3><h3>${escapeHtml(rightPlain)}</h3>`;
+      },
+    )
     .replace(/<p>([\s\S]*?)<\/p>/gi, (match, inner) => {
       if (!isHeadingLikeParagraph(inner)) {
         return match;
@@ -528,6 +558,19 @@ function standardizeContentHtml(value) {
 
       return `<h3>${escapeHtml(stripMarkupToPlainText(inner))}</h3>`;
     })
+    .replace(
+      /<h3>([^<]{2,64})\s+(Work Experience|Academic experience|Technology stack|Workshop|Publication)<\/h3>/gi,
+      (match, leftHeading, rightHeading) => {
+        if (
+          !isLikelyShortHeadingText(leftHeading) ||
+          !isLikelyShortHeadingText(rightHeading)
+        ) {
+          return match;
+        }
+
+        return `<h3>${escapeHtml(stripMarkupToPlainText(leftHeading))}</h3><h3>${escapeHtml(stripMarkupToPlainText(rightHeading))}</h3>`;
+      },
+    )
     .replace(/<p>\s*(https?:\/\/[^\s<]+)\s*<\/p>/gi, (_, href) => {
       const safeHref = escapeHtml(href);
       return `<p><a href="${safeHref}" target="_blank" rel="noopener noreferrer">${safeHref}</a></p>`;
@@ -763,10 +806,25 @@ function feishuXmlToHtml(xml) {
     )
     .replace(/<\/callout>/g, "</div>")
     .replace(/<(h1|h2|h3)(\s+[^>]*)?>\s*<br\s*\/?>/gi, "<$1>")
-    .replace(/<(h1|h2|h3)>([\s\S]*?)<(ol|ul)>/gi, "<$1>$2</$1><$3>")
-    .replace(/<\/(ol|ul)>\s*<\/(h1|h2|h3)>/gi, "</$1>")
-    .replace(/<p>([\s\S]*?)<(ol|ul)>/gi, "<p>$1</p><$2>")
-    .replace(/<\/(ol|ul)>\s*<\/p>/gi, "</$1>")
+    .replace(
+      /<(h1|h2|h3|p)(\s+[^>]*)?>((?:(?!<(?:h1|h2|h3|p|ol|ul)\b)[\s\S])*?)<\/(?:h1|h2|h3|p)>\s*<(ol|ul)>/gi,
+      (_, openTag, attrs, inner, listTag) => {
+        const fixedInner = String(inner || "")
+          .replace(/<\/(?:h1|h2|h3|p)>\s*$/i, "")
+          .trim();
+        return `<${openTag}>${fixedInner}</${openTag}><${listTag}>`;
+      },
+    )
+    .replace(
+      /<(h1|h2|h3|p)(\s+[^>]*)?>((?:(?!<(?:h1|h2|h3|p|ol|ul)\b)[\s\S])*?)<(ol|ul)>/gi,
+      (_, openTag, attrs, inner, listTag) => {
+        const fixedInner = String(inner || "")
+          .replace(/<\/(?:h1|h2|h3|p)>\s*$/i, "")
+          .trim();
+        return `<${openTag}>${fixedInner}</${openTag}><${listTag}>`;
+      },
+    )
+    .replace(/<\/(ol|ul)>\s*<\/(h1|h2|h3|p)>/gi, "</$1>")
     .replace(/<(h1|h2|h3|p|ul|ol|li|blockquote|pre|code|strong|em|span)(\s+[^>]*)?>/g, "<$1>")
     .replace(/<hr\s*\/>/g, "<hr />")
     .replace(/<h([1-3])>\s*<\/h\1>/gi, "")
