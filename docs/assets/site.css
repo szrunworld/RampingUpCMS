@@ -118,13 +118,6 @@ img {
   margin-top: 22px;
 }
 
-.hero-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-}
-
 .hero-pill {
   display: inline-flex;
   align-items: center;
@@ -611,88 +604,8 @@ img {
   font-size: 14px;
 }
 
-.submit-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
-  gap: 20px;
-}
-
-.submit-card {
-  border-radius: 34px;
-  padding: 30px 28px;
-}
-
-.submit-card h1,
-.submit-card h2 {
-  margin: 0 0 12px;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-}
-
-.submit-card h1 {
-  font-size: clamp(34px, 5vw, 62px);
-}
-
-.submit-card p {
-  margin: 0;
-  color: var(--muted);
-}
-
-.submit-form {
-  display: grid;
-  gap: 14px;
-  margin-top: 22px;
-}
-
-.submit-field {
-  display: grid;
-  gap: 8px;
-}
-
-.submit-field label {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.submit-field input,
-.submit-field select {
-  width: 100%;
-  min-height: 50px;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.76);
-  color: var(--text);
-  padding: 12px 14px;
-  font: inherit;
-}
-
-.submit-field small,
-.submit-status,
-.submit-list {
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.submit-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-.submit-list {
-  margin: 16px 0 0;
-  padding-left: 18px;
-}
-
-.submit-list li + li {
-  margin-top: 10px;
-}
-
 @media (max-width: 960px) {
   .site-hero,
-  .submit-grid,
   .cards,
   .post-card {
     grid-template-columns: 1fr;
