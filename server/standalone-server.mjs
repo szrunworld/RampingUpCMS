@@ -5,7 +5,9 @@ import previewPage from "./preview-page.js";
 const port = Number(process.env.PORT || 4310);
 
 const server = http.createServer((req, res) => {
-  if (req.method === "GET" && req.url === "/") {
+  const requestUrl = new URL(req.url || "/", `http://127.0.0.1:${port}`);
+
+  if (req.method === "GET" && requestUrl.pathname === "/") {
     previewPage(req, res);
     return;
   }
